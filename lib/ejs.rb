@@ -96,15 +96,21 @@ module EJS
         # we need to add variable declaration to get valid js code
         ast = parser.parse("var evaluate = #{source}")
 
+        skipVariables = ['arguments']
+
+        ast.pointcut(RKelly::Nodes::VarDeclNode).matches.each do |node|
+          skipVariables.push node.name
+        end
+
         # iterate through used variables and replace it with ones from __context
-        ast.pointcut(RKelly::Nodes::ResolveNode).matches.map! do |node| 
-          if node.value != '__p'
+        ast.pointcut(RKelly::Nodes::ResolveNode).matches.each do |node| 
+          if !skipVariables.include?(node.value)
             node.value = "__context.#{node.value}"
           end
         end
 
         # remove previously added variable declaration and line breaks
-        ast.to_ecma.gsub('var evaluate = ', '').gsub("\n", ' ')
+        source = ast.to_ecma.gsub('var evaluate = ', '').gsub("\n", ' ')
       end
 
       def escape_function
