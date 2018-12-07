@@ -66,7 +66,7 @@ module EJS
       end
 
       def js_unescape!(source)
-        source.gsub!(JS_UNESCAPE_PATTERN) { |match| JS_UNESCAPES[match[1..-1]] }        
+        source.gsub!(JS_UNESCAPE_PATTERN) { |match| JS_UNESCAPES[match[1..-1]] }
         source
       end
 
