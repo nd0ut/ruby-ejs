@@ -96,6 +96,7 @@ module EJS
         # we need to add variable declaration to get valid js code
         ast = parser.parse("var evaluate = #{source}")
 
+        # collect declarated variables to skip them from modifying
         skipVariables = ['arguments']
 
         ast.pointcut(RKelly::Nodes::VarDeclNode).matches.each do |node|
