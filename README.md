@@ -1,3 +1,9 @@
+# `ruby-ejs` Uploadcare edition
+
+This is our fork with the only change - working completely without `with` statement. 
+
+This means that it can be used in `strict mode`.
+
 EJS (Embedded JavaScript) template compiler for Ruby
 ====================================================
 
