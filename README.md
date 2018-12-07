@@ -1,6 +1,6 @@
 # `ruby-ejs` Uploadcare edition
 
-This is our fork with the only change - working completely without `with` statement. 
+This is our fork with the only change - internal implementation completely without `with` statements. 
 
 This means that it can be used in `strict mode`.
 
