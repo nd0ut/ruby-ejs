@@ -42,7 +42,7 @@ module EJS
       source = "function(__context){var __p=[],print=function(){__p.push.apply(__p,arguments);};" +
         "__p.push('#{source}'); return __p.join('');}"
 
-      pass_locals(source)
+      inject_context(source)
     end
 
     # Evaluates an EJS template with the given local variables and
@@ -88,7 +88,7 @@ module EJS
         end
       end
 
-      def pass_locals(source)
+      def inject_context(source)
         require 'rkelly'
 
         parser = RKelly::Parser.new
@@ -103,7 +103,7 @@ module EJS
           skipVariables.push node.name
         end
 
-        # iterate through used variables and replace it with ones from __context
+        # iterate through undeclared variables and replace them with ones from __context
         ast.pointcut(RKelly::Nodes::ResolveNode).matches.each do |node| 
           if !skipVariables.include?(node.value)
             node.value = "__context.#{node.value}"
