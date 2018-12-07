@@ -29,7 +29,7 @@ module EJS
     # template.
     #
     #     EJS.compile("Hello <%= name %>")
-    #     # => "function(obj){...}"
+    #     # => "function(__context){...}"
     #
     def compile(source, options = {})
       source = source.dup
@@ -38,8 +38,11 @@ module EJS
       replace_escape_tags!(source, options)
       replace_interpolation_tags!(source, options)
       replace_evaluation_tags!(source, options)
-      "function(obj){var __p=[],print=function(){__p.push.apply(__p,arguments);};" +
-        "with(obj||{}){__p.push('#{source}');}return __p.join('');}"
+
+      source = "function(__context){var __p=[],print=function(){__p.push.apply(__p,arguments);};" +
+        "__p.push('#{source}'); return __p.join('');}"
+
+      pass_locals(source)
     end
 
     # Evaluates an EJS template with the given local variables and
@@ -63,7 +66,7 @@ module EJS
       end
 
       def js_unescape!(source)
-        source.gsub!(JS_UNESCAPE_PATTERN) { |match| JS_UNESCAPES[match[1..-1]] }
+        source.gsub!(JS_UNESCAPE_PATTERN) { |match| JS_UNESCAPES[match[1..-1]] }        
         source
       end
 
@@ -83,6 +86,25 @@ module EJS
         source.gsub!(options[:interpolation_pattern] || interpolation_pattern) do
           "', #{js_unescape!($1)},'"
         end
+      end
+
+      def pass_locals(source)
+        require 'rkelly'
+
+        parser = RKelly::Parser.new
+
+        # we need to add variable declaration to get valid js code
+        ast = parser.parse("var evaluate = #{source}")
+
+        # iterate through used variables and replace it with ones from __context
+        ast.pointcut(RKelly::Nodes::ResolveNode).matches.map! do |node| 
+          if node.value != '__p'
+            node.value = "__context.#{node.value}"
+          end
+        end
+
+        # remove previously added variable declaration and line breaks
+        ast.to_ecma.gsub('var evaluate = ', '').gsub("\n", ' ')
       end
 
       def escape_function
