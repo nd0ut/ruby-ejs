@@ -39,7 +39,7 @@ module EJS
       replace_interpolation_tags!(source, options)
       replace_evaluation_tags!(source, options)
 
-      source = "function(__scope){var __p=[],print=function(){__p.push.apply(__p,arguments);};" +
+      source = "function(__scope){if(!__scope){__scope = {};};var __p=[],print=function(){__p.push.apply(__p,arguments);};" +
         "__p.push('#{source}'); return __p.join('');}"
 
       inject_scope(source)
