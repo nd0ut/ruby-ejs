@@ -97,7 +97,7 @@ module EJS
         ast = parser.parse("var evaluate = #{source}")
 
         # collect declarated variables to skip them from modifying
-        skipVariables = ['arguments']
+        skipVariables = ['arguments', '__scope']
 
         ast.pointcut(RKelly::Nodes::VarDeclNode).matches.each do |node|
           skipVariables.push node.name
