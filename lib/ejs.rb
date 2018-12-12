@@ -29,7 +29,7 @@ module EJS
     # template.
     #
     #     EJS.compile("Hello <%= name %>")
-    #     # => "function(obj){...}"
+    #     # => "function(__scope){...}"
     #
     def compile(source, options = {})
       source = source.dup
@@ -38,8 +38,11 @@ module EJS
       replace_escape_tags!(source, options)
       replace_interpolation_tags!(source, options)
       replace_evaluation_tags!(source, options)
-      "function(obj){var __p=[],print=function(){__p.push.apply(__p,arguments);};" +
-        "with(obj||{}){__p.push('#{source}');}return __p.join('');}"
+
+      source = "function(__scope){if(!__scope){__scope = {};};var __p=[],print=function(){__p.push.apply(__p,arguments);};" +
+        "__p.push('#{source}'); return __p.join('');}"
+
+      inject_scope(source)
     end
 
     # Evaluates an EJS template with the given local variables and
@@ -83,6 +86,32 @@ module EJS
         source.gsub!(options[:interpolation_pattern] || interpolation_pattern) do
           "', #{js_unescape!($1)},'"
         end
+      end
+
+      def inject_scope(source)
+        require 'rkelly'
+
+        parser = RKelly::Parser.new
+
+        # we need to add variable declaration to get valid js code
+        ast = parser.parse("var evaluate = #{source}")
+
+        # collect declarated variables to skip them from modifying
+        skipVariables = ['arguments']
+
+        ast.pointcut(RKelly::Nodes::VarDeclNode).matches.each do |node|
+          skipVariables.push node.name
+        end
+
+        # iterate through undeclared variables and replace them with ones from __scope
+        ast.pointcut(RKelly::Nodes::ResolveNode).matches.each do |node| 
+          if !skipVariables.include?(node.value)
+            node.value = "__scope.#{node.value}"
+          end
+        end
+
+        # remove previously added variable declaration and line breaks
+        source = ast.to_ecma.gsub('var evaluate = ', '').gsub("\n", ' ')
       end
 
       def escape_function

@@ -6,7 +6,8 @@ Gem::Specification.new do |s|
 
   s.files = Dir["README.md", "LICENSE", "lib/**/*.rb"]
 
-  s.add_development_dependency "execjs", "~> 0.4"
+  s.add_runtime_dependency "execjs", "~> 0.4"
+  s.add_runtime_dependency "rkelly-remix", "~> 0.0.7"
 
   s.authors = ["Sam Stephenson"]
   s.email = ["sstephenson@gmail.com"]
